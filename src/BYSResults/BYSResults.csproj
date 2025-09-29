@@ -1,0 +1,37 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+	  <Nullable>enable</Nullable>
+	  <PackageId>BYSResults</PackageId>
+	  <Version>1.1.4</Version>
+	  <Authors>James Thompson</Authors>
+	  <Company> Northern Alberta Institute of Technology</Company>
+	  <Description>Lightweight result types for explicit success/failure handling in .NET applications.</Description>
+	  <PackageTags>result;error;functional;fluent</PackageTags>
+	  <PackageLicenseExpression>MIT</PackageLicenseExpression>
+	  <RepositoryUrl>https://github.com/thumper631/BYSResults</RepositoryUrl>
+	  <RepositoryType>git</RepositoryType>
+	  <PackageProjectUrl>https://github.com/thumper631/BYSResults</PackageProjectUrl>
+	  <PackageIcon>icon.png</PackageIcon>
+	  <!-- optional -->
+	  <PackageReleaseNotes>1.1.4 - Updated GetInnerException to handle null InnerException
+1.1.3 - Added Revision History to readme.md
+1.1.1/2 - Added readme.md file
+1.1.0 - Added AddError(Exception exception)
+1.0.0 - Initial release of BYSResults.</PackageReleaseNotes>
+	  <Title>BYS Results</Title>
+	  <PackageReadmeFile>README.md</PackageReadmeFile>
+  </PropertyGroup>
+
+	<ItemGroup>
+		<!-- ensure the file is packed -->
+		<None Include="..\..\README.md">
+		  <Pack>True</Pack>
+		  <PackagePath>\</PackagePath>
+		</None>
+		<None Include="icon.png" Pack="true" PackagePath="" />
+	</ItemGroup>
+
+</Project>
