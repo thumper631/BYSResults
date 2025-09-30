@@ -20,16 +20,16 @@ Lightweight result types for explicit success/failure handling in .NET applicati
    - [Error](#error)  
 5. [Advanced Usage](#advanced-usage)  
 6. [Revision History](#revision-history) 
-6. [Contributing](#contributing)  
-7. [License](#license)  
-8. [Authors & Acknowledgments](#authors--acknowledgments)  
-9. [Links](#links)  
+7. [Contributing](#contributing)  
+8. [License](#license)  
+9. [Authors & Acknowledgments](#authors--acknowledgments)  
+10. [Links](#links)  
 
 ---
 
 ## Features
 
-- **No exceptions for control flow** – all outcomes are explicit  
+- **No exceptions for control flow** — all outcomes are explicit  
 - **Fluent chaining** via `Bind`, `Map`, etc.  
 - **Easy combination** with `Result.Combine(...)`  
 - **Error aggregation** and inspection (`.Errors`, `.FirstError`)  
@@ -43,7 +43,7 @@ Install via **.NET CLI**:
 
 ```bash
 dotnet add package BYSResults
-````
+```
 
 Or via **Package Manager Console**:
 
@@ -189,14 +189,17 @@ var final = Result.Success()
 
 ## Revision History
 
-| Version | Date         | Description                    |
-|---------|--------------|--------------------------------|
-| 1.0.0   | 2025-05-08   | Initial check-in               |
-| 1.1.0   | 2025-06-01   | Added AddError(Exception exception)        |
-| 1.1.1   | 2025-06-01   | Correct issues with readme.md       |
-| 1.1.2   | 2025-06-01   | Correct issues with readme.md       |
-| 1.1.3   | 2025-06-01   | Added Revision History to readme.md       |
-| 1.1.3   | 2025-06-02   | Updated GetInnerException to handle null InnerException       |
+| Version | Date       | Description                                                              |
+|---------|------------|--------------------------------------------------------------------------|
+| 1.0.0   | 2025-05-08 | Initial check-in                                                         |
+| 1.1.0   | 2025-06-01 | Added AddError(Exception exception)                                      |
+| 1.1.1   | 2025-06-01 | Corrected issues with readme.md                                          |
+| 1.1.2   | 2025-06-01 | Corrected issues with readme.md                                          |
+| 1.1.3   | 2025-06-01 | Added Revision History to readme.md                                      |
+| 1.1.4   | 2025-06-02 | Updated GetInnerException to handle null InnerException                  |
+| 1.1.5   | 2025-09-30 | Fixed NuGet package health issues (deterministic builds, symbols); added unit tests |
+
+---
 
 ## Contributing
 
@@ -243,6 +246,14 @@ Thanks to all contributors.
 * Repository: [https://github.com/Thumper631/BYSResults](https://github.com/Thumper631/BYSResults)
 * Issues: [https://github.com/Thumper631/BYSResults/issues](https://github.com/Thumper631/BYSResults/issues)
 * Documentation: [https://Thumper631.github.io/BYSResults](https://Thumper631.github.io/BYSResults)
+```
 
-```
-```
+## Key Changes Made:
+
+1. **Fixed duplicate version 1.1.3** - The original had two entries for 1.1.3; I kept the first one and corrected the second to be 1.1.4
+2. **Added version 1.1.5** with today's date (2025-09-30) and a description of the changes
+3. **Fixed formatting issues** in the revision history table for consistency
+4. **Corrected "Correct" to "Corrected"** in version descriptions for proper grammar
+5. **Fixed Table of Contents numbering** - Contributing was listed as item 6 twice; corrected the sequence
+
+The revision history now clearly shows the progression of your package and includes the important infrastructure improvements made in version 1.1.5!
