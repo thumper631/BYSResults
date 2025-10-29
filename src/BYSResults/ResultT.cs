@@ -16,6 +16,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Runtime.CompilerServices;
 
 namespace BYSResults
 {
@@ -92,6 +93,23 @@ namespace BYSResults
         /// <param name="message">The error message.</param>
         /// <returns>A failure result.</returns>
         public new static Result<T> Failure(string code, string message) => Failure(new Error(code, message));
+
+        /// <summary>
+        /// Executes a function and returns a successful result with its return value, or a failure result if an exception is thrown.
+        /// </summary>
+        /// <param name="func">The function to execute.</param>
+        /// <returns>A successful result with the function's return value, or a failure result with the exception details.</returns>
+        public static Result<T> Try(Func<T> func)
+        {
+            try
+            {
+                return Success(func());
+            }
+            catch (Exception ex)
+            {
+                return new Result<T>().AddError(ex);
+            }
+        }
 
         /// <summary>
         /// Creates a new Result, combining the results of multiple other Results.
@@ -193,6 +211,235 @@ namespace BYSResults
             }
 
             return this;
+        }
+
+        /// <summary>
+        /// Gets the value if successful, or returns the specified default value if failed.
+        /// </summary>
+        /// <param name="defaultValue">The default value to return if the result is a failure.</param>
+        /// <returns>The result value if successful, otherwise the default value.</returns>
+        public T GetValueOr(T defaultValue)
+        {
+            return IsSuccess ? Value! : defaultValue;
+        }
+
+        /// <summary>
+        /// Gets the value if successful, or returns the value from the specified function if failed.
+        /// </summary>
+        /// <param name="defaultValueFunc">A function that returns the default value if the result is a failure.</param>
+        /// <returns>The result value if successful, otherwise the value from the function.</returns>
+        public T GetValueOr(Func<T> defaultValueFunc)
+        {
+            return IsSuccess ? Value! : defaultValueFunc();
+        }
+
+        /// <summary>
+        /// Returns this result if successful, or the specified alternative result if failed.
+        /// </summary>
+        /// <param name="alternativeResult">The alternative result to return if this result is a failure.</param>
+        /// <returns>This result if successful, otherwise the alternative result.</returns>
+        public Result<T> OrElse(Result<T> alternativeResult)
+        {
+            return IsSuccess ? this : alternativeResult;
+        }
+
+        /// <summary>
+        /// Returns this result if successful, or the result from the specified function if failed.
+        /// </summary>
+        /// <param name="alternativeResultFunc">A function that returns an alternative result if this result is a failure.</param>
+        /// <returns>This result if successful, otherwise the result from the function.</returns>
+        public Result<T> OrElse(Func<Result<T>> alternativeResultFunc)
+        {
+            return IsSuccess ? this : alternativeResultFunc();
+        }
+
+        /// <summary>
+        /// Executes an action with the value without modifying the result. Useful for side effects like logging.
+        /// </summary>
+        /// <param name="action">The action to execute with the value if successful.</param>
+        /// <returns>The same result instance.</returns>
+        public Result<T> Tap(Action<T> action)
+        {
+            if (IsSuccess)
+            {
+                action(Value!);
+            }
+            return this;
+        }
+
+        /// <summary>
+        /// Executes an action if the result is a failure, without modifying the result.
+        /// </summary>
+        /// <param name="action">The action to execute if failed, receiving the errors.</param>
+        /// <returns>The same result instance.</returns>
+        public new Result<T> TapOnFailure(Action<IReadOnlyList<Error>> action)
+        {
+            if (IsFailure)
+            {
+                action(Errors);
+            }
+            return this;
+        }
+
+        /// <summary>
+        /// Executes a function and returns a new result if this result is successful.
+        /// </summary>
+        /// <param name="func">The function to execute if successful, receiving the value.</param>
+        /// <returns>A new result from the function if successful, otherwise this failure.</returns>
+        public Result<T> OnSuccess(Func<T, Result<T>> func)
+        {
+            if (IsSuccess)
+            {
+                return func(Value!);
+            }
+            return this;
+        }
+
+        /// <summary>
+        /// Executes a function and returns a new result if this result is a failure.
+        /// </summary>
+        /// <param name="func">The function to execute if failed, receiving the errors.</param>
+        /// <returns>A new result from the function if failed, otherwise this success.</returns>
+        public Result<T> OnFailure(Func<IReadOnlyList<Error>, Result<T>> func)
+        {
+            if (IsFailure)
+            {
+                return func(Errors);
+            }
+            return this;
+        }
+
+        /// <summary>
+        /// Ensures that a condition on the value is met, otherwise adds an error and converts to failure.
+        /// </summary>
+        /// <param name="predicate">The condition that must be true for the value.</param>
+        /// <param name="error">The error to add if the condition is false.</param>
+        /// <returns>This result if the condition is met, otherwise a failure result with the error.</returns>
+        public Result<T> Ensure(Func<T, bool> predicate, Error error)
+        {
+            if (IsFailure)
+            {
+                return this;
+            }
+
+            if (!predicate(Value!))
+            {
+                return AddError(error);
+            }
+
+            return this;
+        }
+
+        /// <summary>
+        /// Ensures that a condition on the value is met, otherwise adds an error and converts to failure.
+        /// </summary>
+        /// <param name="predicate">The condition that must be true for the value.</param>
+        /// <param name="errorMessage">The error message if the condition is false.</param>
+        /// <returns>This result if the condition is met, otherwise a failure result with the error.</returns>
+        public Result<T> Ensure(Func<T, bool> predicate, string errorMessage)
+        {
+            return Ensure(predicate, new Error(errorMessage));
+        }
+
+        /// <summary>
+        /// Asynchronously maps the value of a successful result to a new value using the specified function.
+        /// If the result is a failure, the original failure is propagated.
+        /// </summary>
+        /// <typeparam name="TNext">The type of the new value.</typeparam>
+        /// <param name="func">The async function to apply to the value.</param>
+        /// <returns>A task containing a new result with the mapped value, or the original failure.</returns>
+        public async Task<Result<TNext>> MapAsync<TNext>(Func<T, Task<TNext>> func)
+        {
+            if (IsFailure)
+            {
+                return Result<TNext>.Failure(Errors);
+            }
+            var result = await func(Value!);
+            return Result<TNext>.Success(result);
+        }
+
+        /// <summary>
+        /// Asynchronously binds the value of a successful result to a new result using the specified function.
+        /// If the result is a failure, the original failure is propagated.
+        /// </summary>
+        /// <typeparam name="TNext">The type of the value of the new result.</typeparam>
+        /// <param name="func">The async function to apply to the value, which returns a new result.</param>
+        /// <returns>A task containing the result returned by the function, or the original failure.</returns>
+        public async Task<Result<TNext>> BindAsync<TNext>(Func<T, Task<Result<TNext>>> func)
+        {
+            if (IsFailure)
+            {
+                return Result<TNext>.Failure(Errors);
+            }
+            return await func(Value!);
+        }
+
+        /// <summary>
+        /// Asynchronously executes a function and returns a successful result with its return value, or a failure result if an exception is thrown.
+        /// </summary>
+        /// <param name="func">The async function to execute.</param>
+        /// <returns>A task containing a successful result with the function's return value, or a failure result with the exception details.</returns>
+        public static async Task<Result<T>> TryAsync(Func<Task<T>> func)
+        {
+            try
+            {
+                var result = await func();
+                return Success(result);
+            }
+            catch (Exception ex)
+            {
+                return new Result<T>().AddError(ex);
+            }
+        }
+
+        /// <summary>
+        /// Asynchronously executes an action with the value without modifying the result. Useful for side effects like logging.
+        /// </summary>
+        /// <param name="action">The async action to execute with the value if successful.</param>
+        /// <returns>A task containing the same result instance.</returns>
+        public async Task<Result<T>> TapAsync(Func<T, Task> action)
+        {
+            if (IsSuccess)
+            {
+                await action(Value!);
+            }
+            return this;
+        }
+
+        /// <summary>
+        /// Executes one of two functions depending on the result state.
+        /// </summary>
+        /// <param name="onSuccess">The function to execute if the result is successful, receiving the value.</param>
+        /// <param name="onFailure">The function to execute if the result is a failure.</param>
+        public void Match(Action<T> onSuccess, Action<IReadOnlyList<Error>> onFailure)
+        {
+            if (IsSuccess)
+            {
+                onSuccess(Value!);
+            }
+            else
+            {
+                onFailure(Errors);
+            }
+        }
+
+        /// <summary>
+        /// Executes one of two functions depending on the result state and returns a value.
+        /// </summary>
+        /// <typeparam name="TReturn">The type of the return value.</typeparam>
+        /// <param name="onSuccess">The function to execute if the result is successful, receiving the value.</param>
+        /// <param name="onFailure">The function to execute if the result is a failure.</param>
+        /// <returns>The value returned by either function.</returns>
+        public TReturn Match<TReturn>(Func<T, TReturn> onSuccess, Func<IReadOnlyList<Error>, TReturn> onFailure)
+        {
+            if (IsSuccess)
+            {
+                return onSuccess(Value!);
+            }
+            else
+            {
+                return onFailure(Errors);
+            }
         }
     }
 }

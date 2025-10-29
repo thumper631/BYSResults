@@ -29,10 +29,16 @@ Lightweight result types for explicit success/failure handling in .NET applicati
 
 ## Features
 
-- **No exceptions for control flow** — all outcomes are explicit  
-- **Fluent chaining** via `Bind`, `Map`, etc.  
-- **Easy combination** with `Result.Combine(...)`  
-- **Error aggregation** and inspection (`.Errors`, `.FirstError`)  
+- **No exceptions for control flow** — all outcomes are explicit
+- **Fluent chaining** via `Bind`, `Map`, `MapAsync`, `BindAsync`, etc.
+- **Pattern matching** with `Match` for elegant error handling
+- **Exception safety** with `Try` and `TryAsync` factory methods
+- **Value extraction** with `GetValueOr` and `OrElse` for fallback handling
+- **Side effects** via `Tap`, `TapAsync`, `OnSuccess`, `OnFailure` without breaking chains
+- **Validation** with `Ensure` for inline condition checking
+- **Async support** for modern .NET applications
+- **Easy combination** with `Result.Combine(...)`
+- **Error aggregation** and inspection (`.Errors`, `.FirstError`)
 - **Generic and non-generic** variants (`Result` vs. `Result<T>`)  
 
 ---
@@ -89,66 +95,85 @@ foreach (var err in r4.Errors)
 
 ### Result
 
-* **bool IsSuccess**
-  True if operation succeeded.
+#### Core Properties & Status
+* **bool IsSuccess** - True if operation succeeded.
+* **bool IsFailure** - True if operation failed.
+* **IReadOnlyList<Error> Errors** - List of all errors (empty if success).
+* **Error? FirstError** - Shortcut to the first error, or null if none.
 
-* **bool IsFailure**
-  True if operation failed.
+#### Factory Methods
+* **static Result Success()** - Create a successful `Result`.
+* **static Result Failure(...)** - Create a failure `Result` (overloads: `Error`, `IEnumerable<Error>`, `string`, `(code, message)`).
+* **static Result Try(Action)** - Execute an action and return success, or failure if exception is thrown.
+* **static Result Combine(...)** - Combine multiple `Result` instances into one, aggregating errors.
 
-* **IReadOnlyList<Error> Errors**
-  List of all errors (empty if success).
+#### Error Management
+* **Result AddError(Error)** - Add an error to an existing `Result`.
+* **Result AddError(Exception)** - Add an exception as an error to an existing `Result`.
+* **Result AddErrors(...)** - Add multiple errors to an existing `Result`.
 
-* **Error? FirstError**
-  Shortcut to the first error, or null if none.
+#### Control Flow & Pattern Matching
+* **void Match(Action onSuccess, Action<IReadOnlyList<Error>> onFailure)** - Execute one of two actions based on result state.
+* **TReturn Match<TReturn>(...)** - Execute one of two functions and return a value based on result state.
+* **Result OnSuccess(Func<Result>)** - Execute a function and return its result if successful.
+* **Result OnFailure(Func<IReadOnlyList<Error>, Result>)** - Execute a function and return its result if failed.
 
-* **static Result Success()**
-  Create a successful `Result`.
+#### Side Effects & Debugging
+* **Result Tap(Action)** - Execute an action without modifying the result (useful for logging).
+* **Result TapOnSuccess(Action)** - Execute an action only if successful.
+* **Result TapOnFailure(Action<IReadOnlyList<Error>>)** - Execute an action only if failed.
 
-* **static Result Failure(...)**
-  Create a failure `Result` (overloads: `Error`, `IEnumerable<Error>`, `string`, `(code, message)`).
-
-* **static Result Combine(...)**
-  Combine multiple `Result` instances into one, aggregating errors.
-
-* **Result AddError(Error)**
-  Add an error to an existing `Result`.
-
-* **Result AddError(Exception)**
-  Add an exception as a error to an existing `Result`.
-
-* **Result AddErrors(...)**
-  Add multiple errors to an existing `Result`.
+#### Validation
+* **Result Ensure(Func<bool>, Error)** - Validate a condition, adding an error if false.
+* **Result Ensure(Func<bool>, string)** - Validate a condition, adding an error message if false.
 
 ---
 
 ### Result<T>
 
-* **T? Value**
-  The value if successful (default if failure).
+#### Core Properties
+* **T? Value** - The value if successful (default if failure).
 
-* **static Result<T> Success(T value)**
-  Create a successful `Result<T>` with the given value.
+#### Factory Methods
+* **static Result<T> Success(T value)** - Create a successful `Result<T>` with the given value.
+* **static Result<T> Failure(...)** - Create a failure `Result<T>` (same overloads as `Result`).
+* **static Result<T> Try(Func<T>)** - Execute a function and return its value, or failure if exception is thrown.
+* **static new Result<T> Combine(...)** - Combine multiple `Result<T>` instances; returns `Result<T>`.
 
-* **static Result<T> Failure(...)**
-  Create a failure `Result<T>` (same overloads as `Result`).
+#### Functional Composition
+* **Result<TNext> Map(Func\<T, TNext>)** - Transform the value on success, propagate errors on failure.
+* **Result<TNext> Bind(Func\<T, Result<TNext>>)** - Chain operations that return `Result<TNext>`.
 
-* **static new Result<T> Combine(...)**
-  Combine multiple `Result<T>` instances; returns `Result<T>`.
+#### Async Operations
+* **Task<Result<TNext>> MapAsync(Func\<T, Task<TNext>>)** - Asynchronously transform the value.
+* **Task<Result<TNext>> BindAsync(Func\<T, Task<Result<TNext>>>)** - Asynchronously chain operations.
+* **static Task<Result<T>> TryAsync(Func<Task<T>>)** - Execute async function, catching exceptions.
+* **Task<Result<T>> TapAsync(Func\<T, Task>)** - Execute async side effect.
 
-* **Result<TNext> Map(Func\<T, TNext>)**
-  Transform the value on success, propagate errors on failure.
+#### Value Extraction & Fallbacks
+* **T GetValueOr(T defaultValue)** - Get value if successful, otherwise return default.
+* **T GetValueOr(Func<T>)** - Get value if successful, otherwise call function for default.
+* **Result<T> OrElse(Result<T>)** - Return this if successful, otherwise return alternative.
+* **Result<T> OrElse(Func<Result<T>>)** - Return this if successful, otherwise call function for alternative.
 
-* **Result<TNext> Bind(Func\<T, Result<TNext>>)**
-  Chain operations that return `Result<TNext>`.
+#### Error Management
+* **Result<T> WithValue(T)** - Set the `.Value` on an existing successful result.
+* **new Result<T> AddError(Error)** - Add an error (returns `Result<T>` for chaining).
+* **new Result<T> AddErrors(...)** - Add multiple errors (returns `Result<T>`).
 
-* **Result<T> WithValue(T)**
-  Set the `.Value` on an existing successful result.
+#### Control Flow & Pattern Matching
+* **void Match(Action<T>, Action<IReadOnlyList<Error>>)** - Execute one of two actions based on result state.
+* **TReturn Match<TReturn>(Func\<T, TReturn>, Func<IReadOnlyList<Error>, TReturn>)** - Execute function and return value.
+* **Result<T> OnSuccess(Func\<T, Result<T>>)** - Execute a function with the value if successful.
+* **Result<T> OnFailure(Func<IReadOnlyList<Error>, Result<T>>)** - Execute a function if failed.
 
-* **new Result<T> AddError(Error)**
-  Add an error (returns `Result<T>` for chaining).
+#### Side Effects & Debugging
+* **Result<T> Tap(Action<T>)** - Execute an action with the value without modifying result.
+* **new Result<T> TapOnFailure(Action<IReadOnlyList<Error>>)** - Execute an action only if failed.
 
-* **new Result<T> AddErrors(...)**
-  Add multiple errors (returns `Result<T>`).
+#### Validation
+* **Result<T> Ensure(Func\<T, bool>, Error)** - Validate the value, adding an error if condition is false.
+* **Result<T> Ensure(Func\<T, bool>, string)** - Validate the value, adding an error message if condition is false.
 
 ---
 
@@ -170,19 +195,78 @@ foreach (var err in r4.Errors)
 
 ## Advanced Usage
 
+### Pattern Matching
 ```csharp
-// Combine several results
-var c = Result.Combine(r1, r2, r3);
-if (c.IsFailure)
-{
-    Console.WriteLine($"Combined failed: {string.Join(", ", c.Errors)}");
-}
+// Handle both success and failure cases
+var result = Result<int>.Try(() => int.Parse(input));
 
-// Fluent chaining
-var final = Result.Success()
-    .Bind(_ => SomeOperation())       // returns Result<T>
-    .Map(value => Process(value))     // returns Result<U>
-    .AddError(new Error("X100", "Extra issue"));
+var message = result.Match(
+    onSuccess: value => $"Parsed: {value}",
+    onFailure: errors => $"Failed: {errors.First().Message}"
+);
+```
+
+### Exception Safety with Try
+```csharp
+// Synchronous
+var result = Result<int>.Try(() => RiskyOperation());
+
+// Asynchronous
+var asyncResult = await Result<string>.TryAsync(async () => await FetchDataAsync());
+```
+
+### Value Extraction with Fallbacks
+```csharp
+// Simple fallback
+int value = result.GetValueOr(0);
+
+// Lazy fallback
+int value = result.GetValueOr(() => ExpensiveDefault());
+
+// Alternative result
+var final = primaryResult.OrElse(fallbackResult);
+```
+
+### Fluent Chaining & Validation
+```csharp
+var result = Result<int>.Success(42)
+    .Ensure(v => v > 0, "Must be positive")
+    .Ensure(v => v < 100, "Must be less than 100")
+    .Map(v => v * 2)
+    .Tap(v => Console.WriteLine($"Value: {v}"))
+    .Bind(v => AnotherOperation(v));
+```
+
+### Async Operations
+```csharp
+var result = await Result<User>.Success(userId)
+    .MapAsync(async id => await GetUserAsync(id))
+    .BindAsync(async user => await ValidateUserAsync(user))
+    .TapAsync(async user => await LogAsync($"User: {user.Name}"));
+```
+
+### Error Recovery
+```csharp
+var result = Result<int>.Failure("Database error")
+    .OnFailure(errors =>
+    {
+        Logger.Log(errors);
+        return Result<int>.Success(GetCachedValue());
+    });
+```
+
+### Combining Results
+```csharp
+var combined = Result.Combine(
+    ValidateName(name),
+    ValidateEmail(email),
+    ValidateAge(age)
+);
+
+if (combined.IsFailure)
+{
+    Console.WriteLine($"Validation failed: {string.Join(", ", combined.Errors)}");
+}
 ```
 
 ---
@@ -198,6 +282,7 @@ var final = Result.Success()
 | 1.1.3   | 2025-06-01 | Added Revision History to readme.md                                      |
 | 1.1.4   | 2025-06-02 | Updated GetInnerException to handle null InnerException                  |
 | 1.1.5   | 2025-09-30 | Fixed NuGet package health issues (deterministic builds, symbols); added unit tests |
+| 1.2.0   | 2025-10-29 | Major feature release: Added Match pattern matching, Try/TryAsync exception safety, GetValueOr/OrElse value extraction, Tap/TapAsync side effects, OnSuccess/OnFailure callbacks, Ensure validation, MapAsync/BindAsync async operations, and comprehensive test suite |
 
 ---
 

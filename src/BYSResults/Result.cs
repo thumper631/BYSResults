@@ -112,6 +112,24 @@ namespace BYSResults
         public static Result Failure(string code, string message) => Failure(new Error(code, message));
 
         /// <summary>
+        /// Executes an action and returns a successful result, or a failure result if an exception is thrown.
+        /// </summary>
+        /// <param name="action">The action to execute.</param>
+        /// <returns>A successful result if the action completes, or a failure result with the exception details.</returns>
+        public static Result Try(Action action)
+        {
+            try
+            {
+                action();
+                return Success();
+            }
+            catch (Exception ex)
+            {
+                return new Result().AddError(ex);
+            }
+        }
+
+        /// <summary>
         /// Creates a new Result, combining the results of multiple other Results.
         /// If all input results are successful, the new result is also successful.
         /// If any input result is a failure, the new result is also a failure, and its errors are the combined errors of all input results.
@@ -226,6 +244,141 @@ namespace BYSResults
             }
 
             return ex;
+        }
+
+        /// <summary>
+        /// Executes an action without modifying the result. Useful for side effects like logging.
+        /// </summary>
+        /// <param name="action">The action to execute.</param>
+        /// <returns>The same result instance.</returns>
+        public Result Tap(Action action)
+        {
+            action();
+            return this;
+        }
+
+        /// <summary>
+        /// Executes an action if the result is successful, without modifying the result.
+        /// </summary>
+        /// <param name="action">The action to execute if successful.</param>
+        /// <returns>The same result instance.</returns>
+        public Result TapOnSuccess(Action action)
+        {
+            if (IsSuccess)
+            {
+                action();
+            }
+            return this;
+        }
+
+        /// <summary>
+        /// Executes an action if the result is a failure, without modifying the result.
+        /// </summary>
+        /// <param name="action">The action to execute if failed, receiving the errors.</param>
+        /// <returns>The same result instance.</returns>
+        public Result TapOnFailure(Action<IReadOnlyList<Error>> action)
+        {
+            if (IsFailure)
+            {
+                action(Errors);
+            }
+            return this;
+        }
+
+        /// <summary>
+        /// Executes an action and returns a new result if this result is successful.
+        /// </summary>
+        /// <param name="action">The action to execute if successful.</param>
+        /// <returns>A new result from the action if successful, otherwise this failure.</returns>
+        public Result OnSuccess(Func<Result> action)
+        {
+            if (IsSuccess)
+            {
+                return action();
+            }
+            return this;
+        }
+
+        /// <summary>
+        /// Executes an action and returns a new result if this result is a failure.
+        /// </summary>
+        /// <param name="action">The action to execute if failed, receiving the errors.</param>
+        /// <returns>A new result from the action if failed, otherwise this success.</returns>
+        public Result OnFailure(Func<IReadOnlyList<Error>, Result> action)
+        {
+            if (IsFailure)
+            {
+                return action(Errors);
+            }
+            return this;
+        }
+
+        /// <summary>
+        /// Ensures that a condition is met, otherwise adds an error and converts to failure.
+        /// </summary>
+        /// <param name="predicate">The condition that must be true.</param>
+        /// <param name="error">The error to add if the condition is false.</param>
+        /// <returns>This result if the condition is met, otherwise a failure result with the error.</returns>
+        public Result Ensure(Func<bool> predicate, Error error)
+        {
+            if (IsFailure)
+            {
+                return this;
+            }
+
+            if (!predicate())
+            {
+                return AddError(error);
+            }
+
+            return this;
+        }
+
+        /// <summary>
+        /// Ensures that a condition is met, otherwise adds an error and converts to failure.
+        /// </summary>
+        /// <param name="predicate">The condition that must be true.</param>
+        /// <param name="errorMessage">The error message if the condition is false.</param>
+        /// <returns>This result if the condition is met, otherwise a failure result with the error.</returns>
+        public Result Ensure(Func<bool> predicate, string errorMessage)
+        {
+            return Ensure(predicate, new Error(errorMessage));
+        }
+
+        /// <summary>
+        /// Executes one of two functions depending on the result state.
+        /// </summary>
+        /// <param name="onSuccess">The function to execute if the result is successful.</param>
+        /// <param name="onFailure">The function to execute if the result is a failure.</param>
+        public void Match(Action onSuccess, Action<IReadOnlyList<Error>> onFailure)
+        {
+            if (IsSuccess)
+            {
+                onSuccess();
+            }
+            else
+            {
+                onFailure(Errors);
+            }
+        }
+
+        /// <summary>
+        /// Executes one of two functions depending on the result state and returns a value.
+        /// </summary>
+        /// <typeparam name="TReturn">The type of the return value.</typeparam>
+        /// <param name="onSuccess">The function to execute if the result is successful.</param>
+        /// <param name="onFailure">The function to execute if the result is a failure.</param>
+        /// <returns>The value returned by either function.</returns>
+        public TReturn Match<TReturn>(Func<TReturn> onSuccess, Func<IReadOnlyList<Error>, TReturn> onFailure)
+        {
+            if (IsSuccess)
+            {
+                return onSuccess();
+            }
+            else
+            {
+                return onFailure(Errors);
+            }
         }
 
     }
