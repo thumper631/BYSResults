@@ -107,7 +107,9 @@ namespace BYSResults
             }
             catch (Exception ex)
             {
-                return new Result<T>().AddError(ex);
+                var result = new Result<T> { IsSuccess = false };
+                result.AddError(ex);
+                return result;
             }
         }
 
@@ -388,7 +390,9 @@ namespace BYSResults
             }
             catch (Exception ex)
             {
-                return new Result<T>().AddError(ex);
+                var result = new Result<T> { IsSuccess = false };
+                result.AddError(ex);
+                return result;
             }
         }
 
