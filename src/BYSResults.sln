@@ -7,6 +7,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BYSResults", "BYSResults\BY
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BYSResults.Tests", "..\BYSResults.Tests\BYSResults.Tests.csproj", "{7DC559BE-39AA-E6C1-6614-98F9DAE1C108}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BYSResults.Examples", "..\BYSResults.Examples\BYSResults.Examples.csproj", "{3D3F04A3-3429-B9A6-DD30-0CAA45919C40}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +23,10 @@ Global
 		{7DC559BE-39AA-E6C1-6614-98F9DAE1C108}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{7DC559BE-39AA-E6C1-6614-98F9DAE1C108}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{7DC559BE-39AA-E6C1-6614-98F9DAE1C108}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3D3F04A3-3429-B9A6-DD30-0CAA45919C40}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3D3F04A3-3429-B9A6-DD30-0CAA45919C40}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3D3F04A3-3429-B9A6-DD30-0CAA45919C40}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3D3F04A3-3429-B9A6-DD30-0CAA45919C40}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

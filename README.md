@@ -11,19 +11,20 @@ Lightweight result types for explicit success/failure handling in .NET applicati
 
 ## Table of Contents
 
-1. [Features](#features)  
-2. [Installation](#installation)  
-3. [Quick Start / Usage Examples](#quick-start--usage-examples)  
-4. [API Reference](#api-reference)  
-   - [Result](#result)  
-   - [Result&lt;T&gt;](#resultt)  
-   - [Error](#error)  
-5. [Advanced Usage](#advanced-usage)  
-6. [Revision History](#revision-history) 
-7. [Contributing](#contributing)  
-8. [License](#license)  
-9. [Authors & Acknowledgments](#authors--acknowledgments)  
-10. [Links](#links)  
+1. [Features](#features)
+2. [Installation](#installation)
+3. [Quick Start / Usage Examples](#quick-start--usage-examples)
+4. [Real-World Examples](#real-world-examples)
+5. [API Reference](#api-reference)
+   - [Result](#result)
+   - [Result&lt;T&gt;](#resultt)
+   - [Error](#error)
+6. [Advanced Usage](#advanced-usage)
+7. [Revision History](#revision-history)
+8. [Contributing](#contributing)
+9. [License](#license)
+10. [Authors & Acknowledgments](#authors--acknowledgments)
+11. [Links](#links)  
 
 ---
 
@@ -88,6 +89,195 @@ foreach (var err in r4.Errors)
     Console.WriteLine(err);
 }
 ```
+
+---
+
+## Real-World Examples
+
+For comprehensive, runnable examples demonstrating real-world usage patterns, see the [**BYSResults.Examples**](BYSResults.Examples/) project.
+
+### Example Categories
+
+The examples project includes:
+
+1. **[Web API Examples](BYSResults.Examples/WebApiExamples.cs)** - Converting Result to HTTP responses, CRUD operations
+2. **[Database Examples](BYSResults.Examples/DatabaseExamples.cs)** - Repository pattern, transactions, batch operations
+3. **[Validation Examples](BYSResults.Examples/ValidationExamples.cs)** - Form validation, error aggregation, business rules
+4. **[Async Examples](BYSResults.Examples/AsyncExamples.cs)** - External APIs, parallel operations, retry logic
+5. **[Chaining Examples](BYSResults.Examples/ChainingExamples.cs)** - Railway-oriented programming, complex workflows
+
+### Web API Integration
+
+```csharp
+// Converting Result to HTTP-style responses
+public ApiResponse<User> GetUser(int id)
+{
+    var result = userService.GetUserById(id);
+
+    return result.Match(
+        onSuccess: user => new ApiResponse<User>
+        {
+            StatusCode = 200,
+            Data = user
+        },
+        onFailure: errors => new ApiResponse<User>
+        {
+            StatusCode = 404,
+            Errors = errors.Select(e => e.Message).ToList()
+        }
+    );
+}
+```
+
+### Database Operations
+
+```csharp
+// Repository pattern with validation and side effects
+public async Task<Result<Customer>> CreateCustomerAsync(CustomerDto dto)
+{
+    return await Result<CustomerDto>.Success(dto)
+        .Ensure(d => !string.IsNullOrEmpty(d.Email), "Email is required")
+        .Ensure(d => d.Email.Contains("@"), "Valid email is required")
+        .Ensure(d => d.Age >= 18, new Error("AGE_RESTRICTION", "Must be 18 or older"))
+        .MapAsync(async d => new Customer
+        {
+            Name = d.Name,
+            Email = d.Email,
+            Age = d.Age,
+            CreatedAt = DateTime.UtcNow
+        })
+        .BindAsync(async customer => await repository.SaveAsync(customer))
+        .TapAsync(async customer => await SendWelcomeEmailAsync(customer));
+}
+```
+
+### Validation Patterns
+
+```csharp
+// Collecting all validation errors at once
+public Result<RegistrationForm> ValidateRegistration(RegistrationForm form)
+{
+    var errors = new List<Error>();
+
+    if (string.IsNullOrWhiteSpace(form.Name))
+        errors.Add(new Error("NAME_REQUIRED", "Name is required"));
+
+    if (string.IsNullOrWhiteSpace(form.Email))
+        errors.Add(new Error("EMAIL_REQUIRED", "Email is required"));
+    else if (!form.Email.Contains("@"))
+        errors.Add(new Error("EMAIL_INVALID", "Email must be valid"));
+
+    if (form.Password.Length < 8)
+        errors.Add(new Error("PASSWORD_TOO_SHORT", "Password must be 8+ characters"));
+
+    return errors.Any()
+        ? Result<RegistrationForm>.Failure(errors)
+        : Result<RegistrationForm>.Success(form);
+}
+```
+
+### Railway-Oriented Programming
+
+```csharp
+// Complex multi-stage workflow with early exit on failure
+public async Task<Result<ProcessedOrder>> ProcessOrderAsync(OrderRequest request)
+{
+    return await Result<OrderRequest>.Success(request)
+        .BindAsync(async r => await ValidateOrderAsync(r))
+        .BindAsync(async r => await CheckInventoryAsync(r))
+        .BindAsync(async r => await CalculatePricingAsync(r))
+        .BindAsync(async r => await ProcessPaymentAsync(r))
+        .BindAsync(async r => await CreateShipmentAsync(r))
+        .TapAsync(async o => await SendConfirmationEmailAsync(o))
+        .TapAsync(async o => await LogOrderAsync(o));
+}
+```
+
+### External API Integration
+
+```csharp
+// Handling external API calls with error handling
+public async Task<Result<WeatherData>> GetWeatherAsync(string city)
+{
+    return await Result<string>.Success(city)
+        .Ensure(c => !string.IsNullOrWhiteSpace(c), "City is required")
+        .MapAsync(async c => await FetchWeatherJsonAsync(c))
+        .MapAsync(async json => await DeserializeWeatherAsync(json))
+        .Ensure(data => data != null, "Failed to parse weather data")
+        .Ensure(data => data.Temperature > -100 && data.Temperature < 100,
+            "Invalid temperature reading");
+}
+```
+
+### Fallback Chains
+
+```csharp
+// Try primary source, fall back to cache, then default
+public async Task<Result<Configuration>> LoadConfigurationAsync()
+{
+    return await LoadFromRemoteAsync()
+        .OrElse(async () => await LoadFromDatabaseAsync())
+        .OrElse(async () => await LoadFromFileAsync())
+        .OrElse(() => Result<Configuration>.Success(GetDefaultConfiguration()));
+}
+```
+
+### Retry Logic
+
+```csharp
+// Automatic retry with exponential backoff
+public async Task<Result<T>> RetryAsync<T>(
+    Func<Task<Result<T>>> operation,
+    int maxRetries = 3)
+{
+    Result<T>? lastResult = null;
+
+    for (int attempt = 1; attempt <= maxRetries; attempt++)
+    {
+        lastResult = await operation();
+
+        if (lastResult.IsSuccess)
+            return lastResult;
+
+        Console.WriteLine($"Attempt {attempt} failed. Retrying...");
+        await Task.Delay(TimeSpan.FromSeconds(attempt)); // Exponential backoff
+    }
+
+    return lastResult!.AddError(
+        new Error("MAX_RETRIES", $"Failed after {maxRetries} attempts"));
+}
+```
+
+### Conditional Processing
+
+```csharp
+// Multi-level approval workflow
+public Result<ApprovalResult> ProcessApprovalWorkflow(ApprovalRequest request)
+{
+    return Result<ApprovalRequest>.Success(request)
+        .Ensure(r => r.Amount > 0, "Amount must be positive")
+        .Bind(r => r.Amount < 1000
+            ? Result<ApprovalRequest>.Success(r)  // Auto-approve
+            : GetManagerApproval(r))
+        .Bind(r => r.Amount < 5000
+            ? Result<ApprovalRequest>.Success(r)
+            : GetDirectorApproval(r))
+        .Map(r => new ApprovalResult
+        {
+            RequestId = r.RequestId,
+            Approved = true
+        });
+}
+```
+
+### Running the Examples
+
+```bash
+cd BYSResults.Examples
+dotnet run
+```
+
+See the [Examples README](BYSResults.Examples/README.md) for detailed explanations of each pattern.
 
 ---
 
@@ -331,14 +521,3 @@ Thanks to all contributors.
 * Repository: [https://github.com/Thumper631/BYSResults](https://github.com/Thumper631/BYSResults)
 * Issues: [https://github.com/Thumper631/BYSResults/issues](https://github.com/Thumper631/BYSResults/issues)
 * Documentation: [https://Thumper631.github.io/BYSResults](https://Thumper631.github.io/BYSResults)
-```
-
-## Key Changes Made:
-
-1. **Fixed duplicate version 1.1.3** - The original had two entries for 1.1.3; I kept the first one and corrected the second to be 1.1.4
-2. **Added version 1.1.5** with today's date (2025-09-30) and a description of the changes
-3. **Fixed formatting issues** in the revision history table for consistency
-4. **Corrected "Correct" to "Corrected"** in version descriptions for proper grammar
-5. **Fixed Table of Contents numbering** - Contributing was listed as item 6 twice; corrected the sequence
-
-The revision history now clearly shows the progression of your package and includes the important infrastructure improvements made in version 1.1.5!
