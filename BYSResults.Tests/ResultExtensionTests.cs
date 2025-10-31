@@ -123,13 +123,15 @@ namespace BYSResults.Tests
         [Fact]
         public void Result_Try_WithException_ShouldReturnFailure()
         {
+            // Test that Try catches exceptions and converts them to errors with exception type as code
             // Act
             var result = Result.Try(() => throw new InvalidOperationException("Test error"));
 
             // Assert
             Assert.True(result.IsFailure);
             Assert.NotEmpty(result.Errors);
-            Assert.Contains("Test error", result.FirstError?.Code);
+            Assert.Equal("InvalidOperationException", result.FirstError?.Code);
+            Assert.Contains("Test error", result.FirstError?.Message);
         }
 
         [Fact]
@@ -146,13 +148,15 @@ namespace BYSResults.Tests
         [Fact]
         public void ResultT_Try_WithException_ShouldReturnFailure()
         {
+            // Test that Try<T> catches exceptions and uses exception type as error code
             // Act
             var result = Result<string>.Try(() => throw new ArgumentException("Invalid argument"));
 
             // Assert
             Assert.True(result.IsFailure);
             Assert.Null(result.Value);
-            Assert.Contains("Invalid argument", result.FirstError?.Code);
+            Assert.Equal("ArgumentException", result.FirstError?.Code);
+            Assert.Contains("Invalid argument", result.FirstError?.Message);
         }
 
         #endregion
@@ -618,6 +622,7 @@ namespace BYSResults.Tests
         [Fact]
         public async Task ResultT_TryAsync_WithException_ShouldReturnFailure()
         {
+            // Test that TryAsync catches exceptions and uses exception type as error code
             // Act
             var result = await Result<int>.TryAsync(async () =>
             {
@@ -627,7 +632,8 @@ namespace BYSResults.Tests
 
             // Assert
             Assert.True(result.IsFailure);
-            Assert.Contains("Async error", result.FirstError?.Code);
+            Assert.Equal("InvalidOperationException", result.FirstError?.Code);
+            Assert.Contains("Async error", result.FirstError?.Message);
         }
 
         [Fact]

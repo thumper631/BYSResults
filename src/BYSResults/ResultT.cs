@@ -114,29 +114,6 @@ namespace BYSResults
         }
 
         /// <summary>
-        /// Creates a new Result, combining the results of multiple other Results.
-        /// If all input results are successful, the new result is also successful.
-        /// If any input result is a failure, the new result is also a failure, and its errors are the combined errors of all input results.
-        /// </summary>
-        /// <param name="results">The Results to combine.</param>
-        /// <returns>A new Result representing the combined outcome.</returns>
-        public static new Result<T> Combine(params Result[] results)
-        {
-            if (results == null || results.Length == 0)
-            {
-                throw new ArgumentException("At least one result must be provided to combine.", nameof(results));
-            }
-
-            var errors = results.Where(r => r.IsFailure).SelectMany(r => r.Errors).ToList();
-            if (errors.Any())
-            {
-                return new Result<T>(default) { IsSuccess = false, Errors = errors };
-            }
-
-            return Success(default!); //  default! to suppress nullable warning.  If all results are success, then the value doesn't matter for the combine.
-        }
-
-        /// <summary>
         ///  Implicit conversion from a value of type T to a successful Result<T>
         /// </summary>
         /// <param name="value"></param>

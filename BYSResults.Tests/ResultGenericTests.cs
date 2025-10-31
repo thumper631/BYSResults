@@ -54,21 +54,21 @@ namespace BYSResults.Tests
         [Fact]
         public void Combine_AllSuccess_ShouldReturnSuccess()
         {
+            // Note: Result<T>.Combine was removed. Use base Result.Combine for combining results.
             var first = Result<int>.Success(1);
             var second = Result<int>.Success(2);
 
-            var combined = Result<int>.Combine(first, second);
+            var combined = Result.Combine(first, second);
 
             Assert.True(combined.IsSuccess);
             Assert.Empty(combined.Errors);
-            Assert.Equal(default, combined.Value);
         }
 
         [Fact]
         public void Combine_WithFailure_ShouldReturnFailure()
         {
             var error = new Error("ERR", "bad");
-            var combined = Result<int>.Combine(Result.Success(), Result.Failure(error));
+            var combined = Result.Combine(Result.Success(), Result.Failure(error));
 
             Assert.True(combined.IsFailure);
             Assert.Contains(error, combined.Errors);
@@ -77,13 +77,13 @@ namespace BYSResults.Tests
         [Fact]
         public void Combine_WithNullArray_ShouldThrow()
         {
-            Assert.Throws<ArgumentException>(() => Result<int>.Combine(null!));
+            Assert.Throws<ArgumentException>(() => Result.Combine(null!));
         }
 
         [Fact]
         public void Combine_WithEmptyArray_ShouldThrow()
         {
-            Assert.Throws<ArgumentException>(() => Result<int>.Combine(Array.Empty<Result>()));
+            Assert.Throws<ArgumentException>(() => Result.Combine(Array.Empty<Result>()));
         }
 
         [Fact]

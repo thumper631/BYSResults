@@ -10,17 +10,27 @@
 //     Copyright (c) NAIT. All rights reserved.
 // </copyright>
 // <summary>
+//  1.2.1
+//  - Fixed AddError(Exception) to use exception type name as error code
+//  - Improved inner exception message formatting with --> separator
+//  - Removed Result<T>.Combine() method (use Result.Combine() instead)
+//  - Updated documentation for AddError/AddErrors methods
+//  - Modernized GetHashCode in Error class
+//  1.2.0
+//  - Major feature release: Match pattern matching, Try/TryAsync exception safety
+//  - Added GetValueOr/OrElse, Tap/TapAsync, OnSuccess/OnFailure, Ensure validation
+//  - Added async operations (MapAsync/BindAsync/TapAsync)
 //  1.1.4
 //  - Updated GetInnerException to handle null InnerException
 //  1.1.3
 //  - Added Revision History to readme.md
 //  1.1.1 - 1.1.2
-//  -  Correct issues with readme.md
+//  - Correct issues with readme.md
 //  1.1.0
 //  - Added AddError(Exception exception)
-//  -   added the ability to accept an exception as a error.   
+//  - Added the ability to accept an exception as a error.
 //  1.0.0
-//  Initial creation.
+//  - Initial creation.
 // </summary>
 // ***********************************************************************
 
@@ -153,31 +163,30 @@ namespace BYSResults
         }
 
         /// <summary>
-        /// Adds an error to the result.  This method is only effective on a failure result.
+        /// Adds an error to the result and converts it to failure if successful.
         /// </summary>
         /// <param name="error">The error to add.</param>
         /// <returns>The Result instance with the added error.</returns>
         public Result AddError(Error error)
         {
-            if (IsSuccess) //check for isSuccess
+            if (IsSuccess)
             {
                 IsSuccess = false;
             }
 
-            if (Errors is List<Error> errorList) //check the type of errors
+            if (Errors is List<Error> errorList)
             {
                 errorList.Add(error);
             }
             else
             {
-                //if it is not a list, create a new list.
                 Errors = new List<Error>(Errors) { error };
             }
             return this;
         }
 
         /// <summary>
-        /// Adds errors to the result.  This method is only effective on a failure result.
+        /// Adds multiple errors to the result and converts it to failure if successful.
         /// </summary>
         /// <param name="errors">The errors to add.</param>
         /// <returns>The Result instance with the added errors.</returns>
@@ -200,42 +209,46 @@ namespace BYSResults
         }
 
         /// <summary>
-        /// Adds an exception message to the result.  This method is only effective on a failure result.
+        /// Adds an error from an exception to the result. Converts success to failure if needed.
+        /// Uses the exception type name as the error code and includes inner exception details in the message.
         /// </summary>
-        /// <param name="exception">exception error to add.</param>
+        /// <param name="exception">The exception to convert to an error.</param>
         /// <returns>The Result instance with the added exception.</returns>
         public Result AddError(Exception exception)
         {
-
-            if (IsSuccess) //check for isSuccess
+            if (IsSuccess)
             {
                 IsSuccess = false;
             }
 
-            Error error = new Error(exception.Message, GetInnerException(exception.InnerException).Message.ToString());
+            // Use exception type as code, main message as message
+            // If there's an inner exception, include it in the message
+            var message = exception.InnerException != null
+                ? $"{exception.Message} --> {GetInnerException(exception.InnerException).Message}"
+                : exception.Message;
 
+            Error error = new Error(exception.GetType().Name, message);
 
-            if (Errors is List<Error> errorList) //check the type of errors
+            if (Errors is List<Error> errorList)
             {
                 errorList.Add(error);
             }
             else
             {
-                //if it is not a list, create a new list.
                 Errors = new List<Error>(Errors) { error };
             }
             return this;
         }
         /// <summary>
-        /// Gets the inner exception.
+        /// Gets the innermost exception by recursively traversing the InnerException chain.
         /// </summary>
-        /// <param name="ex">The ex.</param>
-        /// <returns>System.Exception.</returns>
-        private Exception GetInnerException(System.Exception? ex)
+        /// <param name="ex">The exception to traverse.</param>
+        /// <returns>The innermost exception in the chain.</returns>
+        private Exception GetInnerException(Exception? ex)
         {
             if (ex == null)
             {
-                return new Exception("No inner exception available.");
+                return new Exception("No inner exception");
             }
 
             while (ex.InnerException != null)

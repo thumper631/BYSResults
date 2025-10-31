@@ -473,6 +473,7 @@ if (combined.IsFailure)
 | 1.1.4   | 2025-06-02 | Updated GetInnerException to handle null InnerException                  |
 | 1.1.5   | 2025-09-30 | Fixed NuGet package health issues (deterministic builds, symbols); added unit tests |
 | 1.2.0   | 2025-10-29 | Major feature release: Added Match pattern matching, Try/TryAsync exception safety, GetValueOr/OrElse value extraction, Tap/TapAsync side effects, OnSuccess/OnFailure callbacks, Ensure validation, MapAsync/BindAsync async operations, and comprehensive test suite |
+| 1.2.1   | 2025-10-31 | Code quality improvements: Fixed AddError(Exception) to use exception type as error code, improved inner exception message formatting with --> separator, removed Result&lt;T&gt;.Combine() method (use Result.Combine() instead), modernized Error.GetHashCode() with HashCode.Combine(), updated XML documentation for accuracy, removed unused imports |
 
 ---
 

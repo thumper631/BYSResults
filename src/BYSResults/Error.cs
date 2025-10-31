@@ -14,9 +14,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace BYSResults
 {
@@ -76,16 +73,10 @@ namespace BYSResults
         /// <summary>
         /// Override GetHashCode to provide a hash code consistent with Equals.
         /// </summary>
-        /// <returns></returns>
+        /// <returns>A hash code for this instance.</returns>
         public override int GetHashCode()
         {
-            unchecked // Overflow is fine, just wrap
-            {
-                int hash = 17;
-                hash = hash * 23 + Code.GetHashCode();
-                hash = hash * 23 + Message.GetHashCode();
-                return hash;
-            }
+            return HashCode.Combine(Code, Message);
         }
 
         /// <summary>

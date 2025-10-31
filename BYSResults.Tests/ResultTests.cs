@@ -167,6 +167,7 @@ namespace BYSResults.Tests
         [Fact]
         public void AddError_WithException_ShouldCaptureMessagesAndConvertToFailure()
         {
+            // Test that AddError(Exception) uses exception type as code and combines messages
             var exception = new InvalidOperationException("Top level error", new Exception("Inner detail"));
             var result = Result.Success();
 
@@ -174,13 +175,14 @@ namespace BYSResults.Tests
 
             Assert.True(result.IsFailure);
             var captured = Assert.Single(result.Errors);
-            Assert.Equal("Top level error", captured.Code);
-            Assert.Equal("Inner detail", captured.Message);
+            Assert.Equal("InvalidOperationException", captured.Code);
+            Assert.Equal("Top level error --> Inner detail", captured.Message);
         }
 
         [Fact]
         public void AddError_WithExceptionWithoutInner_ShouldUseDefaultMessage()
         {
+            // Test that AddError(Exception) uses exception type as code and exception message when no inner exception
             var exception = new InvalidOperationException("Top level error");
             var result = Result.Success();
 
@@ -188,8 +190,8 @@ namespace BYSResults.Tests
 
             Assert.True(result.IsFailure);
             var captured = Assert.Single(result.Errors);
-            Assert.Equal("Top level error", captured.Code);
-            Assert.Equal("No inner exception available.", captured.Message);
+            Assert.Equal("InvalidOperationException", captured.Code);
+            Assert.Equal("Top level error", captured.Message);
         }
     }
 }
