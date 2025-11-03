@@ -10,19 +10,21 @@ Lightweight result types for explicit success/failure handling in .NET applicati
 ## Table of Contents
 
 1. [Features](#features)
-2. [Installation](#installation)
-3. [Quick Start / Usage Examples](#quick-start--usage-examples)
-4. [Real-World Examples](#real-world-examples)
-5. [API Reference](#api-reference)
+2. [Choosing Between Result and Result&lt;T&gt;](#choosing-between-result-and-resultt)
+3. [Installation](#installation)
+4. [Quick Start / Usage Examples](#quick-start--usage-examples)
+5. [Real-World Examples](#real-world-examples)
+6. [API Reference](#api-reference)
    - [Result](#result)
    - [Result&lt;T&gt;](#resultt)
    - [Error](#error)
-6. [Advanced Usage](#advanced-usage)
-7. [Revision History](#revision-history)
-8. [Contributing](#contributing)
-9. [License](#license)
-10. [Authors & Acknowledgments](#authors--acknowledgments)
-11. [Links](#links)  
+7. [Advanced Usage](#advanced-usage)
+8. [Thread Safety](#thread-safety)
+9. [Revision History](#revision-history)
+10. [Contributing](#contributing)
+11. [License](#license)
+12. [Authors & Acknowledgments](#authors--acknowledgments)
+13. [Links](#links)  
 
 ---
 
@@ -38,7 +40,102 @@ Lightweight result types for explicit success/failure handling in .NET applicati
 - **Async support** for modern .NET applications
 - **Easy combination** with `Result.Combine(...)`
 - **Error aggregation** and inspection (`.Errors`, `.FirstError`)
-- **Generic and non-generic** variants (`Result` vs. `Result<T>`)  
+- **Generic and non-generic** variants (`Result` vs. `Result<T>`)
+
+---
+
+## Choosing Between Result and Result<T>
+
+BYSResults provides two result types to match different operation scenarios. Understanding when to use each will make your code clearer and more intentional.
+
+### Quick Decision Rule
+
+**Use `Result`** when your operation only needs to indicate success or failure (no return value needed):
+```csharp
+public Result DeleteUser(int userId)
+public Result SendEmail(string to, string subject)
+public Result ValidatePassword(string password)
+```
+
+**Use `Result<T>`** when your operation returns a value on success:
+```csharp
+public Result<User> GetUserById(int userId)
+public Result<int> ParseInteger(string input)
+public Result<decimal> CalculateTotal(Order order)
+```
+
+### Common Scenarios
+
+| Scenario | Type | Example Signature |
+|----------|------|-------------------|
+| **Delete operation** | `Result` | `Result DeleteCustomer(int id)` |
+| **Update (no return)** | `Result` | `Result UpdateSettings(Settings settings)` |
+| **Validation (pass/fail)** | `Result` | `Result ValidateEmail(string email)` |
+| **Send/publish** | `Result` | `Result PublishMessage(Message msg)` |
+| **Fetch/get** | `Result<T>` | `Result<User> GetUser(int id)` |
+| **Create (return entity)** | `Result<T>` | `Result<Order> CreateOrder(OrderDto dto)` |
+| **Parse/transform** | `Result<T>` | `Result<int> ParseInt(string s)` |
+| **Calculate** | `Result<T>` | `Result<decimal> CalculatePrice(Item item)` |
+
+### Feature Availability
+
+`Result<T>` includes additional functional programming methods that work with values:
+
+```csharp
+// Result<T> has value transformation methods
+var result = Result<int>.Success(42)
+    .Map(x => x * 2)           // Transform the value
+    .Bind(x => Divide(x, 2))   // Chain operations
+    .Ensure(x => x > 0, "Must be positive");
+
+// Result doesn't need these because there's no value to transform
+var result = Result.Success()
+    .Ensure(() => IsValid(), "Must be valid")
+    .Tap(() => LogSuccess());
+```
+
+### Practical Examples
+
+**Non-generic for void-like operations:**
+```csharp
+// Repository delete method - no value to return
+public async Task<Result> DeleteProductAsync(int productId)
+{
+    var product = await _context.Products.FindAsync(productId);
+    if (product == null)
+        return Result.Failure("PRODUCT_NOT_FOUND", "Product not found");
+
+    _context.Products.Remove(product);
+    await _context.SaveChangesAsync();
+
+    return Result.Success();  // Just confirms deletion succeeded
+}
+```
+
+**Generic for data-returning operations:**
+```csharp
+// Repository get method - returns the product
+public async Task<Result<Product>> GetProductAsync(int productId)
+{
+    var product = await _context.Products.FindAsync(productId);
+
+    return product == null
+        ? Result<Product>.Failure("PRODUCT_NOT_FOUND", "Product not found")
+        : Result<Product>.Success(product);  // Returns the found product
+}
+```
+
+### Design Tip
+
+Think of `Result` as analogous to `void` return types, and `Result<T>` as analogous to typed return values:
+
+```csharp
+// Traditional approach
+void DeleteUser(int id)              →  Result DeleteUser(int id)
+User GetUser(int id)                 →  Result<User> GetUser(int id)
+```
+
+The key difference is that both `Result` and `Result<T>` can represent failure with error details, unlike traditional return types.
 
 ---
 
@@ -280,6 +377,12 @@ See the [Examples README](BYSResults.Examples/README.md) for detailed explanatio
 ---
 
 ## API Reference
+
+This section provides detailed API documentation for both `Result` and `Result<T>`. For guidance on choosing between the two types, see [Choosing Between Result and Result&lt;T&gt;](#choosing-between-result-and-resultt).
+
+**Quick reminder:**
+- `Result` - For operations that only indicate success/failure (no return value)
+- `Result<T>` - For operations that return a value on success
 
 ### Result
 

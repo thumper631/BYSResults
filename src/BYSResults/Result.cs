@@ -37,7 +37,9 @@ using System.Linq;
 namespace BYSResults
 {
     /// <summary>
-    /// Represents the outcome of an operation, either success or failure, potentially with a value and/or errors.
+    /// Represents the outcome of an operation that indicates success or failure without returning a value.
+    /// Use this for operations like delete, update (no-return), send, or validate (pass/fail only).
+    /// For operations that return a value on success, use <see cref="Result{T}"/> instead.
     /// </summary>
     public class Result
     {

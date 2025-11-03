@@ -18,9 +18,11 @@ using System.Runtime.CompilerServices;
 namespace BYSResults
 {
     /// <summary>
-    /// Represents the outcome of an operation that may or may not return a value of type <typeparamref name="T"/>.
+    /// Represents the outcome of an operation that returns a value of type <typeparamref name="T"/> on success.
+    /// Use this for operations like get/fetch, parse, transform, or calculate that produce a result value.
+    /// For operations that only indicate success/failure without returning a value, use <see cref="Result"/> instead.
     /// </summary>
-    /// <typeparam name="T">The type of the value returned by the operation.</typeparam>
+    /// <typeparam name="T">The type of the value returned by the operation on success.</typeparam>
     public class Result<T> : Result
     {
         /// <summary>

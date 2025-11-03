@@ -5,6 +5,21 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+- **"Choosing Between Result and Result<T>"** section in README with comprehensive guidance on when to use each type
+  - Quick decision rules with code examples
+  - Common scenarios comparison table
+  - Feature availability explanation
+  - Practical repository examples (delete vs get operations)
+  - Design tip comparing to traditional void vs typed return values
+
+### Changed
+- Enhanced API Reference section introduction with cross-reference to usage guidance
+- Improved XML documentation for `Result` class to clarify it's for operations without return values
+- Improved XML documentation for `Result<T>` class to clarify it's for operations that return values on success
+
 ## [1.2.2] - 2025-11-02
 
 ### Added
