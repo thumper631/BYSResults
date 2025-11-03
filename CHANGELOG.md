@@ -5,6 +5,24 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.2] - 2025-11-02
+
+### Added
+- Comprehensive **Thread Safety** documentation section in README with best practices for concurrent code
+- **CONTRIBUTING.md** with detailed contribution guidelines, code style, testing requirements, and PR process
+- **CHANGELOG.md** following Keep a Changelog format for structured version history
+- **.editorconfig** for consistent code formatting across editors (C#, XML, JSON, YAML, Markdown)
+- **GitHub issue templates** for bug reports and feature requests
+- **GitHub PR template** with comprehensive checklist
+
+### Changed
+- Updated copyright statements to "Copyright (c) 2025 James Thompson" for consistency with LICENSE
+- Removed manual "Last Modified On" dates from file headers (Git provides accurate tracking)
+- Updated Revision History in README to link to CHANGELOG.md
+
+### Fixed
+- Fixed README API documentation by removing outdated `Result<T>.Combine()` reference (removed in v1.2.1)
+
 ## [1.2.1] - 2025-10-31
 
 ### Fixed
@@ -87,6 +105,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+[1.2.2]: https://github.com/Thumper631/BYSResults/compare/v1.2.1...v1.2.2
 [1.2.1]: https://github.com/Thumper631/BYSResults/compare/v1.2.0...v1.2.1
 [1.2.0]: https://github.com/Thumper631/BYSResults/compare/v1.1.5...v1.2.0
 [1.1.5]: https://github.com/Thumper631/BYSResults/compare/v1.1.4...v1.1.5

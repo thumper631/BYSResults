@@ -4,7 +4,7 @@
 		<ImplicitUsings>enable</ImplicitUsings>
 		<Nullable>enable</Nullable>
 		<PackageId>BYSResults</PackageId>
-		<Version>1.2.1</Version>
+		<Version>1.2.2</Version>
 		<Authors>James Thompson</Authors>
 		<Company>Northern Alberta Institute of Technology</Company>
 		<Description>Lightweight result types for explicit success/failure handling in .NET applications.</Description>
@@ -15,6 +15,7 @@
 		<PackageProjectUrl>https://github.com/thumper631/BYSResults</PackageProjectUrl>
 		<PackageIcon>icon.png</PackageIcon>
 		<PackageReleaseNotes>
+			1.2.2 - Documentation improvements: Added comprehensive Thread Safety section, CONTRIBUTING.md, CHANGELOG.md, .editorconfig, GitHub issue/PR templates, aligned copyright statements
 			1.2.1 - Code quality improvements: Fixed AddError(Exception) to use exception type as error code, improved inner exception formatting, removed Result&lt;T&gt;.Combine() method, modernized Error.GetHashCode(), updated documentation
 			1.2.0 - Major feature release: Match pattern matching, Try/TryAsync exception safety, GetValueOr/OrElse, Tap/TapAsync, OnSuccess/OnFailure, Ensure validation, async operations (MapAsync/BindAsync/TapAsync), comprehensive test suite
 			1.1.5 - Fixed NuGet package health issues (enabled deterministic builds, added symbols)
