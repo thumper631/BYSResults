@@ -1,8 +1,6 @@
 # BYSResults
 
-[![NuGet version](https://img.shields.io/nuget/v/BYSResults.svg)](https://www.nuget.org/packages/BYSResults)  
-[![Build Status](https://github.com/Thumper631/BYSResults/actions/workflows/ci.yml/badge.svg)](https://github.com/Thumper631/BYSResults/actions)  
-[![Coverage Status](https://coveralls.io/repos/github/Thumper631/BYSResults/badge.svg?branch=main)](https://coveralls.io/github/Thumper631/BYSResults?branch=main)  
+[![NuGet version](https://img.shields.io/nuget/v/BYSResults.svg)](https://www.nuget.org/packages/BYSResults)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
 Lightweight result types for explicit success/failure handling in .NET applications.
