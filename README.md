@@ -682,11 +682,10 @@ public async Task<Result> ProcessMultipleAsync(IEnumerable<Item> items)
 
 For a detailed changelog with all releases and changes, see [CHANGELOG.md](CHANGELOG.md).
 
-**Latest Release: v1.2.2** (2025-11-02)
-- Added comprehensive Thread Safety documentation
-- Added CONTRIBUTING.md, CHANGELOG.md, .editorconfig
-- Added GitHub issue and PR templates
-- Aligned copyright statements
+**Latest Release: v1.2.3** (2025-11-02)
+- Added "Choosing Between Result and Result<T>" guidance section
+- Enhanced XML documentation for Result and Result<T> classes
+- Improved API Reference introduction with usage guidance
 
 ---
 
