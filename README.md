@@ -328,7 +328,8 @@ See the [Examples README](BYSResults.Examples/README.md) for detailed explanatio
 * **static Result<T> Success(T value)** - Create a successful `Result<T>` with the given value.
 * **static Result<T> Failure(...)** - Create a failure `Result<T>` (same overloads as `Result`).
 * **static Result<T> Try(Func<T>)** - Execute a function and return its value, or failure if exception is thrown.
-* **static new Result<T> Combine(...)** - Combine multiple `Result<T>` instances; returns `Result<T>`.
+
+> **Note:** `Result<T>.Combine()` was removed in v1.2.1. Use `Result.Combine(...)` from the base class instead, which accepts both `Result` and `Result<T>` instances.
 
 #### Functional Composition
 * **Result<TNext> Map(Func\<T, TNext>)** - Transform the value on success, propagate errors on failure.
@@ -461,19 +462,130 @@ if (combined.IsFailure)
 
 ---
 
+## Thread Safety
+
+### Overview
+
+BYSResults is designed with immutability and thread safety in mind, but there are important considerations when sharing Result instances across threads.
+
+### Thread-Safe Operations
+
+**Immutable Components:**
+- **Error** instances are fully immutable and thread-safe
+  - All properties are readonly
+  - Can be safely shared across threads
+
+**Reading Results:**
+- Reading properties (`IsSuccess`, `IsFailure`, `Value`, `Errors`) is thread-safe
+- Once a Result is created, its success/failure state doesn't change
+
+### Thread-Unsafe Operations
+
+**Mutable Error Lists:**
+- `AddError()` and `AddErrors()` methods modify the internal error list
+- These mutations are **NOT thread-safe**
+- Concurrent calls to `AddError()` from multiple threads can cause race conditions
+
+**Recommendations:**
+
+1. **Avoid Mutation After Creation** (Preferred)
+   ```csharp
+   // Good: Create result with all errors upfront
+   var errors = new List<Error> { error1, error2 };
+   var result = Result<int>.Failure(errors);
+   // Now safe to share across threads
+   ```
+
+2. **Don't Share Mutable Results**
+   ```csharp
+   // Avoid: Sharing a result while adding errors
+   var result = Result.Success();
+   Task.Run(() => result.AddError(error1)); // NOT SAFE
+   Task.Run(() => result.AddError(error2)); // NOT SAFE
+   ```
+
+3. **Synchronize Mutations**
+   ```csharp
+   // If you must mutate, use synchronization
+   var result = Result.Success();
+   var lockObj = new object();
+
+   lock (lockObj)
+   {
+       result.AddError(error1);
+       result.AddError(error2);
+   }
+   ```
+
+### Best Practices for Concurrent Code
+
+**Pattern 1: Immutable Results**
+```csharp
+// Create results immutably and share freely
+public async Task<Result<Data>> ProcessAsync()
+{
+    var result = await FetchDataAsync();
+    // Once created, safe to share
+    return result;
+}
+```
+
+**Pattern 2: Collect Then Create**
+```csharp
+// Collect errors locally, then create result once
+public Result ValidateConcurrently(IEnumerable<Item> items)
+{
+    var errors = new ConcurrentBag<Error>();
+
+    Parallel.ForEach(items, item =>
+    {
+        if (!IsValid(item))
+            errors.Add(new Error($"Invalid: {item.Name}"));
+    });
+
+    return errors.Any()
+        ? Result.Failure(errors)
+        : Result.Success();
+}
+```
+
+**Pattern 3: Task Results**
+```csharp
+// Each task creates its own result
+public async Task<Result> ProcessMultipleAsync(IEnumerable<Item> items)
+{
+    var tasks = items.Select(ProcessItemAsync);
+    var results = await Task.WhenAll(tasks);
+
+    // Combine results (thread-safe operation)
+    return Result.Combine(results);
+}
+```
+
+### Summary
+
+| Operation | Thread-Safe? | Notes |
+|-----------|-------------|-------|
+| Reading properties | ✓ Yes | Always safe once created |
+| Creating new results | ✓ Yes | Factory methods are safe |
+| `Map`, `Bind`, etc. | ✓ Yes | Return new instances |
+| `AddError()` | ✗ No | Mutates internal list |
+| `AddErrors()` | ✗ No | Mutates internal list |
+| `Combine()` | ✓ Yes | Reads only, creates new result |
+
+**General Rule:** Treat Result instances as immutable after creation. If you need to add errors, create the result with all errors upfront or ensure proper synchronization.
+
+---
+
 ## Revision History
 
-| Version | Date       | Description                                                              |
-|---------|------------|--------------------------------------------------------------------------|
-| 1.0.0   | 2025-05-08 | Initial check-in                                                         |
-| 1.1.0   | 2025-06-01 | Added AddError(Exception exception)                                      |
-| 1.1.1   | 2025-06-01 | Corrected issues with readme.md                                          |
-| 1.1.2   | 2025-06-01 | Corrected issues with readme.md                                          |
-| 1.1.3   | 2025-06-01 | Added Revision History to readme.md                                      |
-| 1.1.4   | 2025-06-02 | Updated GetInnerException to handle null InnerException                  |
-| 1.1.5   | 2025-09-30 | Fixed NuGet package health issues (deterministic builds, symbols); added unit tests |
-| 1.2.0   | 2025-10-29 | Major feature release: Added Match pattern matching, Try/TryAsync exception safety, GetValueOr/OrElse value extraction, Tap/TapAsync side effects, OnSuccess/OnFailure callbacks, Ensure validation, MapAsync/BindAsync async operations, and comprehensive test suite |
-| 1.2.1   | 2025-10-31 | Code quality improvements: Fixed AddError(Exception) to use exception type as error code, improved inner exception message formatting with --> separator, removed Result&lt;T&gt;.Combine() method (use Result.Combine() instead), modernized Error.GetHashCode() with HashCode.Combine(), updated XML documentation for accuracy, removed unused imports |
+For a detailed changelog with all releases and changes, see [CHANGELOG.md](CHANGELOG.md).
+
+**Latest Release: v1.2.1** (2025-10-31)
+- Fixed `AddError(Exception)` to use exception type as error code
+- Improved inner exception message formatting
+- Removed `Result<T>.Combine()` (use `Result.Combine()` instead)
+- Modernized `Error.GetHashCode()`
 
 ---
 

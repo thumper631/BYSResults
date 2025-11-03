@@ -2,12 +2,9 @@
 // Assembly         : BYSResults
 // Author           : James Thompson
 // Created          : 05-08-2025
-//
-// Last Modified By : James Thompson
-// Last Modified On : 06-01-2025
 // ***********************************************************************
 // <copyright file="Result.cs" company="BYSResults">
-//     Copyright (c) NAIT. All rights reserved.
+//     Copyright (c) 2025 James Thompson
 // </copyright>
 // <summary>
 //  1.2.1
